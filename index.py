@@ -3,6 +3,7 @@ import hashlib
 from base64 import b64encode
 import os
 from OpenSSL import crypto
+from Crypto.PublicKey import RSA
 
 SoapAction = "https://servicos.portaldasfinancas.gov.pt:700/fews/faturas/"
 Action = "https://servicos.portaldasfinancas.gov.pt:700/fews/faturas"
@@ -16,6 +17,11 @@ def extract_public_key(cert_path):
 	pubKeyObject = crtObj.get_pubkey()
 	pubKeyString = crypto.dump_publickey(crypto.FILETYPE_PEM,pubKeyObject)
 	print pubKeyString
+
+def encrypt_text_with_public_key(pubKeyString, text):
+	public_key = RSA.importKey(pubKeyString)
+	encrypted_text = public_key.encrypt(text, 32)
+	return base64_encode(encrypted_text)
 
 def base64_encode(string):
 	return b64encode(string)
