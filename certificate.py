@@ -9,9 +9,15 @@ import suds_requests
 
 
 pfx_path = "/home/yogesh/virtual/test/efatura/credentials/TesteWebservices.pfx"
+cer_path = "/home/yogesh/virtualenv/test/efatura/credentials/ChaveCifraPublicaAT2020.cer"
+
 pfx = open(pfx_path, 'rb').read()
 password = "TESTEwebservice"
 base_url = "https://servicos.portaldasfinancas.gov.pt:700/fews/faturas"
+
+username = "514223502/1"
+user_pass = "u1_webservice"
+
 def get_authenticated_client(base_url, cert, key):
     cache_location = '/tmp/suds'
     cache = suds.cache.DocumentCache(location=cache_location)
