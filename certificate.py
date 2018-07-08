@@ -10,6 +10,50 @@ import suds_requests
 
 pfx_path = "/home/yogesh/virtual/test/efatura/credentials/TesteWebservices.pfx"
 cer_path = "/home/yogesh/virtualenv/test/efatura/credentials/ChaveCifraPublicaAT2020.cer"
+
+def get_xml():
+    User = "user"        
+	Password = "pass"
+	Nonce = "nonce"
+	Created = "Created"
+	requeststr  = ""
+	requeststr = "<S:Envelope xmlns:S=""http://schemas.xmlsoap.org/soap/envelope/"">"
+	requeststr += "<S:Header>"
+	requeststr += "<wss:Security xmlns:wss=""http://schemas.xmlsoap.org/ws/2002/12/secext"">"
+	requeststr += "<wss:UsernameToken>"
+	requeststr += "<wss:Username>" +User+  "</wss:Username>"
+	requeststr += "<wss:Password>" +Password+ " </wss:Password>"
+	requeststr += "<wss:Nonce>" +Nonce+ "</wss:Nonce>"
+	requeststr += "<wss:Created>"+ Created+ "</wss:Created>"
+	requeststr += "</wss:UsernameToken>"
+	requeststr += "</wss:Security>"
+	requeststr += "</S:Header>"
+	requeststr += "<S:Body>"
+	requeststr += "<ns2:RegisterInvoiceElem xmlns:ns2=""http://servicos.portaldasfinancas.gov.pt/faturas/"">"
+	requeststr += "<TaxRegistrationNumber>500555333/0001</TaxRegistrationNumber>"
+	requeststr += "<ns2:InvoiceNo>FT/1</ns2:InvoiceNo>"
+	requeststr += "<ns2:InvoiceDate>2012-05-05</ns2:InvoiceDate>"
+	requeststr += "<ns2:InvoiceType>FT</ns2:InvoiceType>"
+	requeststr += "<CustomerTaxID>299999998</CustomerTaxID>"
+	requeststr += "<Line>"
+	requeststr += "<ns2:DebitAmount>100</ns2:DebitAmount>"
+	requeststr += "<ns2:Tax>"
+	requeststr += "<ns2:TaxType>IVA</ns2:TaxType>"
+	requeststr += "<ns2:TaxCountryRegion>PT</ns2:TaxCountryRegion>"
+	requeststr += "<ns2:TaxPercentage>23</ns2:TaxPercentage>"
+	requeststr += "</ns2:Tax>"
+	requeststr += "</Line>"
+	requeststr += "<DocumentTotals>"
+	requeststr += "<ns2:TaxPayable>23</ns2:TaxPayable>"
+	requeststr += "<ns2:NetTotal>100</ns2:NetTotal>"
+	requeststr += "<ns2:GrossTotal>123</ns2:GrossTotal>"
+	requeststr += "</DocumentTotals>"
+	requeststr += "</ns2:RegisterInvoiceElem>"
+	requeststr += "</S:Body>"
+	requeststr += "</S:Envelope>"
+
+	return requeststr
+
 def get_authenticated_client(base_url, cert, key):
     cache_location = '/tmp/suds'
     cache = suds.cache.DocumentCache(location=cache_location)

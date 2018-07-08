@@ -18,12 +18,22 @@ import suds
 import requests
 import suds_requests
 from suds.sax.element import Element
+from zeep import CachingClient as Client
+from zeep.wsse.signature import Signature
+from zeep.transports import Transport
+from requests import Session, Request
 
-SoapAction = "https://servicos.portaldasfinancas.gov.pt:700/fews/faturas"
+
+############## Variables ###################
+SoapAction = "http://servicos.portaldasfinancas.gov.pt/faturas/RegisterInvoice"
 Action = "https://servicos.portaldasfinancas.gov.pt:700/fews/faturas"
 cert_path = "/home/yogesh/virtual/test/efatura/credentials/ChaveCifraPublicaAT2020.cer"
 pfx_path = "/home/yogesh/virtual/test/efatura/credentials/TesteWebservices.pfx"
 base_url = "https://servicos.portaldasfinancas.gov.pt:700/fews/faturas"
+username = "514223502/1";
+password = "u1_webservice";
+
+
 
 #### Symmetric key Encryption ############
 
@@ -57,6 +67,44 @@ def encrypt_message(private_msg, encoded_secret_key, padding_character):
 
 #########################################
 
+def get_xml(user, password, nonce, date):
+	requeststr  = ""
+	requeststr = "<S:Envelope xmlns:S=""http://schemas.xmlsoap.org/soap/envelope/"">"
+	requeststr += "<S:Header>"
+	requeststr += "<wss:Security xmlns:wss=""http://schemas.xmlsoap.org/ws/2002/12/secext"">"
+	requeststr += "<wss:UsernameToken>"
+	requeststr += "<wss:Username>" +user+  "</wss:Username>"
+	requeststr += "<wss:Password>" +password+ " </wss:Password>"
+	requeststr += "<wss:Nonce>" +nonce+ "</wss:Nonce>"
+	requeststr += "<wss:Created>"+ date+ "</wss:Created>"
+	requeststr += "</wss:UsernameToken>"
+	requeststr += "</wss:Security>"
+	requeststr += "</S:Header>"
+	requeststr += "<S:Body>"
+	requeststr += "<ns2:RegisterInvoiceElem xmlns:ns2=""http://servicos.portaldasfinancas.gov.pt/faturas/"">"
+	requeststr += "<TaxRegistrationNumber>500555333/0001</TaxRegistrationNumber>"
+	requeststr += "<ns2:InvoiceNo>FT/1</ns2:InvoiceNo>"
+	requeststr += "<ns2:InvoiceDate>2012-05-05</ns2:InvoiceDate>"
+	requeststr += "<ns2:InvoiceType>FT</ns2:InvoiceType>"
+	requeststr += "<CustomerTaxID>299999998</CustomerTaxID>"
+	requeststr += "<Line>"
+	requeststr += "<ns2:DebitAmount>100</ns2:DebitAmount>"
+	requeststr += "<ns2:Tax>"
+	requeststr += "<ns2:TaxType>IVA</ns2:TaxType>"
+	requeststr += "<ns2:TaxCountryRegion>PT</ns2:TaxCountryRegion>"
+	requeststr += "<ns2:TaxPercentage>23</ns2:TaxPercentage>"
+	requeststr += "</ns2:Tax>"
+	requeststr += "</Line>"
+	requeststr += "<DocumentTotals>"
+	requeststr += "<ns2:TaxPayable>23</ns2:TaxPayable>"
+	requeststr += "<ns2:NetTotal>100</ns2:NetTotal>"
+	requeststr += "<ns2:GrossTotal>123</ns2:GrossTotal>"
+	requeststr += "</DocumentTotals>"
+	requeststr += "</ns2:RegisterInvoiceElem>"
+	requeststr += "</S:Body>"
+	requeststr += "</S:Envelope>"
+
+	return requeststr
 
 def save_cert_key(cert, key):
     cert_temp = tempfile.mkstemp()[1]
@@ -77,10 +125,13 @@ def get_authenticated_client(base_url, cert, key):
     cache = suds.cache.DocumentCache(location=cache_location)
 
     session = requests.Session()
-    session.auth = ('514223502/1', 'u1_webservice')
-    session.cert = (cert, key)
-    session.headers.update({'x-test': 'true'})
-    soapHeader = get_soap_header()
+    session.verify = cert
+    #session.auth = ('514223502/1', 'u1_webservice')
+    #session.auth = ('514223502/1', 'u1_webservice')
+    session.headers.update({'SOAPAction': 'http://servicos.portaldasfinancas.gov.pt/faturas/RegisterInvoice'})
+	### xml is returned from get_xml()
+    xml = "<S:Envelope xmlns:S=http://schemas.xmlsoap.org/soap/envelope/><S:Header><wss:Security xmlns:wss=http://schemas.xmlsoap.org/ws/2002/12/secext><wss:UsernameToken><wss:Username>514223502/1</wss:Username><wss:Password>bN4xoloIs83a2X77tPdg+g== </wss:Password><wss:Nonce>kO0TXhOgQ2rbl5PlkKqOA0Wk4YEPIfW9ncuoBHI3C0YUQS236NYYBCgd2+KzE1WKunI3vveBRLe8DjRLHiQyFeP8pgekwcqayXzA/Ujfv1UmA4gmuTtyQ9flJUELAT7zHfmikAP+hS5QxgHTXhNei247N+LkaBwkN+ABUJ5IhasNl3EwLp1ePkxV72lktMsySvRIf0GoeaG6g+hWPT5PleUVTJH1TnXhDbOzt9BTy6YxlqQ7IGolVrUimS7MtS/46Qq09k2ShrNIx/CUSnzNsNS8M4Zlj1m0JlP3oCnbmIVMLZagZfV95ZRlnagdyDsqPxrAV/09iRqFaBCpGWcICg==</wss:Nonce><wss:Created>OdLJhmrh9jwFG/2Mw+Ac8Bjk6si4gydK5Td/BLPt+ZA=</wss:Created></wss:UsernameToken></wss:Security></S:Header><S:Body><ns2:RegisterInvoiceElem xmlns:ns2=http://servicos.portaldasfinancas.gov.pt/faturas/><TaxRegistrationNumber>500555333/0001</TaxRegistrationNumber><ns2:InvoiceNo>FT/1</ns2:InvoiceNo><ns2:InvoiceDate>2012-05-05</ns2:InvoiceDate><ns2:InvoiceType>FT</ns2:InvoiceType><CustomerTaxID>299999998</CustomerTaxID><Line><ns2:DebitAmount>100</ns2:DebitAmount><ns2:Tax><ns2:TaxType>IVA</ns2:TaxType><ns2:TaxCountryRegion>PT</ns2:TaxCountryRegion><ns2:TaxPercentage>23</ns2:TaxPercentage></ns2:Tax></Line><DocumentTotals><ns2:TaxPayable>23</ns2:TaxPayable><ns2:NetTotal>100</ns2:NetTotal><ns2:GrossTotal>123</ns2:GrossTotal></DocumentTotals></ns2:RegisterInvoiceElem></S:Body></S:Envelope>"
+
     # print "HEADER===============",soapHeader
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger('suds.client').setLevel(logging.DEBUG)
@@ -88,20 +139,22 @@ def get_authenticated_client(base_url, cert, key):
     logging.getLogger('suds.xsd.schema').setLevel(logging.DEBUG)
     logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
     # t = HttpAuthenticated('514223502/1', 'u1_webservice')
-    print(soapHeader)
     import base64
-    base64string = base64.encodestring('%s:%s' % ('514223502/1', 'OcEtBl1wNk08Pl+0Pg2RiQ==')).replace('\n', '')
+    base64string = base64.encodestring('%s:%s' % ('514223502/1', 'u1_webservice')).replace('\n', '')
     authenticationHeader = {
         "SOAPAction": SoapAction,
-        "Authorization": "Basic %s" % base64string
+       # "Authorization": "Basic %s" % base64string
     }
-    return Client(
-        base_url,
-        # cache=cache,
-        headers=authenticationHeader,
-        soapheaders = soapHeader,
-        transport=suds_requests.RequestsTransport(session)
-    )
+
+    transport = Transport(session=session)
+    c = Client(base_url, transport=transport)
+    # return Client(
+    #     base_url,
+    #     # cache=cache,
+    #     headers=authenticationHeader,
+    #     soapheaders = soapHeader,
+    #     transport=suds_requests.RequestsTransport(session)
+    # )
 
 def get_createdate():
     utc = pytz.utc
@@ -175,8 +228,7 @@ cert, key = save_cert_key(cert, key)
 # print (cert, key)
 
 # print cert, key
-username = "514223502/1";
-password = "u1_webservice";
+
 #date = encrypt_text_with_public_key(get_createdate())
 #smkey = gen_sim_key
 #passw = encrypt_text_with_public_key(password)
@@ -185,11 +237,8 @@ smkey = generate_secret_key_for_AES_cipher()
 date = encrypt_message(get_createdate(), smkey, padding_character)
 passw = encrypt_message(password, smkey, padding_character)
 nonce = encrypt_text_with_public_key(smkey)
-print "user........", username
-print "date.........", date
-print "password..........",passw
-print "nonce.............", nonce
 
+#### create xml with suds
 def get_soap_header(user= username, passw = passw,nonce= nonce, date=date):
     WssSecurity = Element('wss:Security').setText('xmlns:wss="http://schemas.xmlsoap.org/ws/2002/12/secext"')
     soapheader = Element('S:Header')  # create the parent element
@@ -203,5 +252,7 @@ def get_soap_header(user= username, passw = passw,nonce= nonce, date=date):
     WssUsernameToken.children = [WssUsername, WssPassword, WssNonce, WssCreated]
 
     return soapheader
-get_soap_header(username, passw, nonce, date)
+#get_soap_header(username, passw, nonce, date)
+xml = get_xml(username, passw, nonce, date)
+print xml
 get_authenticated_client(base_url, cert, key)
